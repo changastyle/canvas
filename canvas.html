@@ -1,0 +1,166 @@
+<html>
+    <head>
+        <!-- JQUERY: -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+    </head>
+    <body ng-app="app" ng-controller="canvas" ng-init="init()" ng-cloak style="margin: 0px;">
+        <canvas id="canvas" width="800" height="600" style="border:1px solid #000000;"
+            ng-click="canvasClickPos($event)">
+        </canvas>
+        <br>
+        COMPONENT CLICKEADO: {{componenteClickeado}}
+        
+        <br>
+        MODO LINEA: {{modoLinea}} | {{modoVisualizacion}}
+        <br>
+        ARRAY DE COMPONENTES:
+        <br>
+        {{arrComponentes}}
+        <br>
+        ARRAY DE LINEAS
+        <br>
+        {{arrLineas}}
+        
+        <button ng-click="cambiarModoLinea()">
+            MODO LINEA
+        </button>
+        <button ng-click="cambiarModoCuadrado()">
+            MODO CUADRADO
+        </button>
+        <button ng-click="cambiarModoVisualizacion()">
+            MODO VISUALIZACION
+        </button>
+    </body>
+    <script>
+        app = angular.module('app', []);
+        app.controller('canvas', function($scope) 
+        {
+            $scope.x1 = -1;
+            $scope.y1 = -1;
+            $scope.etapaDibujo = 0;
+            $scope.init = function()
+            {
+                $scope.modoVisualizacion = true;
+                $scope.modoLinea = false;
+                $scope.arrComponentes = [];
+                $scope.arrLineas = [];
+                $(document).ready(function()
+                {
+                    canvas = document.getElementById("canvas"); 
+                    ctx = canvas.getContext("2d");
+                    $scope.ctx = ctx;
+
+                    $scope.dibujarCuadradoPorAncho( 100,150 , 25);
+//                    dibujarLinea(ctx , 125 , 175 , 200 , 200);
+                });
+            }
+            $scope.canvasClickPos = function(evento)
+            {
+                cx =  evento.clientX;
+                cy =  evento.clientY;
+                console.log("CANVAS CLICK : " + cx + "," + cy);
+                
+                if($scope.modoVisualizacion)
+                {
+                    $scope.componenteClickeado = null
+                    for(i = 0 ; i < $scope.arrComponentes.length ; i++)
+                    {
+                        componenteLoop = $scope.arrComponentes[i];
+                        if(cx >= componenteLoop.x && cx <= componenteLoop.xf && cy >= componenteLoop.y && cy <= componenteLoop.yf)
+                        {
+                            $scope.componenteClickeado = componenteLoop;
+                            break;
+                        }
+                    }
+                }
+                else if($scope.modoLinea)
+                {
+                    if($scope.etapaDibujo == 0)
+                    {
+                        $scope.x1 = cx;
+                        $scope.y1 = cy;
+                        $scope.etapaDibujo++;
+                    }
+                    else
+                    {
+                        $scope.dibujarLinea($scope.x1 , $scope.y1 , cx ,cy);
+                        $scope.etapaDibujo = 0;
+                    }
+                }
+                else if(!$scope.modoLinea)
+                {
+                    if($scope.etapaDibujo == 0)
+                    {
+                        $scope.x1 = cx;
+                        $scope.y1 = cy;
+                        $scope.etapaDibujo++;
+                    }
+                    else
+                    {
+                        $scope.dibujarCuadrado($scope.x1 , $scope.y1 , cx ,cy);
+                        $scope.etapaDibujo = 0;
+                    }
+                }
+                
+                $scope.$evalAsync();
+            }
+            $scope.dibujarCuadradoPorAncho = function( x ,y , ancho)
+            {
+                yf = y + ancho;
+                xf = x + ancho;
+
+                $scope.dibujarCuadrado(x,y,xf,yf);
+            }
+            $scope.dibujarCuadrado = function( x ,y , xf , yf)
+            {
+                $scope.ctx.moveTo(x, y);
+                $scope.ctx.lineTo(xf, y);
+
+                $scope.ctx.moveTo(xf, y);
+                $scope.ctx.lineTo(xf, yf);
+
+                $scope.ctx.moveTo(xf, yf);
+                $scope.ctx.lineTo(x, yf);
+
+                $scope.ctx.moveTo(x, yf);
+                $scope.ctx.lineTo(x, y);
+
+                // AGREGO AL ARRAY DE COMPONENTES:
+                componenteUI = {"x":x,"y":y,"xf":xf,"yf":yf};
+                $scope.arrComponentes.push(componenteUI);
+                $scope.$evalAsync();
+
+                $scope.ctx.stroke();
+            }
+            $scope. dibujarLinea = function( x , y , xf , yf)
+            {
+                $scope.ctx.moveTo(x, y);
+                $scope.ctx.lineTo(xf, yf);
+                
+                lineaUI = {"x":x,"y":y,"xf":xf,"yf":yf};
+                $scope.arrLineas.push(lineaUI);
+                
+                $scope.ctx.stroke();
+            }
+            $scope.cambiarModoLinea = function()
+            {
+                $scope.modoLinea = true;
+                $scope.modoVisualizacion = false;
+                $scope.$evalAsync();
+            }
+            $scope.cambiarModoCuadrado = function()
+            {
+                $scope.modoLinea = false;
+                $scope.modoVisualizacion = false;
+                $scope.$evalAsync();
+            }
+            $scope.cambiarModoVisualizacion = function()
+            {
+                $scope.modoVisualizacion = true;
+                $scope.modoLinea = false;
+                $scope.$evalAsync();
+            }
+        });
+    </script>
+</html>
